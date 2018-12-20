@@ -3,6 +3,7 @@
         <meta charset="utf-8">
         <script src="mithril.js"></script>
 		<script src="wasm_exec.js"></script>
+        <script src="msgs.js"></script>
 		<script>
 			const go = new Go();
 			WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
@@ -10,5 +11,6 @@
 			});
 		</script>
 	</head>
-	<body></body>
+	<body>
+    </body>
 </html>

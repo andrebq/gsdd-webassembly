@@ -7,10 +7,10 @@ import (
 type (
 	// DOMNode represents a DOM node with the smallest set of attributes
 	DOMNode struct {
-		Tag      string `json:"tag"`
-		Text     string `json:"text,omitempty"`
-		Attrs    Attrs  `json:"attrs"`
-		Children []*DOMNode
+		Tag      string     `json:"tag"`
+		Text     string     `json:"text,omitempty"`
+		Attrs    Attrs      `json:"attrs"`
+		Children []*DOMNode `json:"children"`
 	}
 
 	// Attrs just wraps a simple key-value map
@@ -39,4 +39,27 @@ func (d *DOMNode) JSONString() string {
 		panic("Should never happen: " + err.Error())
 	}
 	return string(buf)
+}
+
+// T change the text associated with the given DOMNode
+func (d *DOMNode) T(v string) *DOMNode {
+	d.Text = v
+	return d
+}
+
+// H builds a new DOMNode with the given tag
+func H(tag string) *DOMNode {
+	return &DOMNode{
+		Tag: tag,
+	}
+}
+
+// Div tag
+func Div() *DOMNode {
+	return H("div")
+}
+
+// Text span
+func Text(value string) *DOMNode {
+	return H("span").T(value)
 }
