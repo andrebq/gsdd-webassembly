@@ -55,8 +55,13 @@ func H(tag string) *DOMNode {
 }
 
 // Div tag
-func Div() *DOMNode {
-	return H("div")
+func Div(children ...*DOMNode) *DOMNode {
+	return H("div").Add(children...)
+}
+
+// P tag
+func P(children ...*DOMNode) *DOMNode {
+	return H("p").Add(children...)
 }
 
 // Text span

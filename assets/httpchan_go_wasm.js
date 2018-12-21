@@ -2,7 +2,7 @@
     function channelWrite(url, data, callback) {
         fetch(url, {
             method: "POST",
-            mode: "no-cors",
+            mode: "cors",
             cache: "no-cache",
             credentials: "same-origin",
             headers: {
@@ -27,7 +27,7 @@
     function channelRead(url, callback) {
         fetch(url, {
             method: "POST",
-            mode: "no-cors",
+            mode: "cors",
             cache: "no-cache",
             credentials: "same-origin",
             headers: {
