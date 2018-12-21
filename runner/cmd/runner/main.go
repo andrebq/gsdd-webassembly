@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -44,22 +46,33 @@ func (r *Resolver) ResolveFunc(module, field string) exec.FunctionImport {
 			})
 		case "__life_log":
 			return timedFn("__life_log", func(vm *exec.VirtualMachine) int64 {
-				ptr := int(uint32(vm.GetCurrentFrame().Locals[0]))
-				msgLen := int(uint32(vm.GetCurrentFrame().Locals[1]))
-				msg := vm.Memory[ptr : ptr+msgLen]
+				msg := readMemBytes(vm, 0)
 				logrus.WithField("app", string(msg)).Info()
 				return 0
 			})
 		case "__life_write_hchan":
 			return timedFn("__life_write_hchan", func(vm *exec.VirtualMachine) int64 {
-				ptr := int(uint32(vm.GetCurrentFrame().Locals[0]))
-				msgLen := int(uint32(vm.GetCurrentFrame().Locals[1]))
-				msg := vm.Memory[ptr : ptr+msgLen]
+				msg := readMemBytes(vm, 0)
 				err := hchan.Write("http://localhost:8082/write/ping", pingPong{ID: string(msg)})
 				if err != nil {
 					logrus.WithError(err).Error("error sending data to channel")
 				}
 				return 0
+			})
+
+		case "__life_read_hchan":
+			return timedFn("__life_read_hchan", func(vm *exec.VirtualMachine) int64 {
+				var out pingPong
+				err := hchan.Read(&out, "http://localhost:8082/read/ping")
+				if err != nil {
+					logrus.WithError(err).Error("error sending data to channel")
+				}
+				buf, _ := json.Marshal(out) // marshall the output to send it back to rust
+				if err := writeMemBytes(vm, 0, buf); err != nil {
+					logrus.WithError(err).Error("unable to write all the bytes needed")
+					return 0
+				}
+				return int64(len(buf))
 			})
 		default:
 			panic(fmt.Errorf("unknown field: %s", field))
@@ -67,6 +80,28 @@ func (r *Resolver) ResolveFunc(module, field string) exec.FunctionImport {
 	default:
 		panic(fmt.Errorf("unknown module: %s", module))
 	}
+}
+
+func readMemBytes(vm *exec.VirtualMachine, localIdx int) []byte {
+	ptr := int(uint32(vm.GetCurrentFrame().Locals[0+localIdx]))
+	msgLen := int(uint32(vm.GetCurrentFrame().Locals[1+localIdx]))
+	msg := vm.Memory[ptr : ptr+msgLen]
+	return msg
+}
+
+func writeMemBytes(vm *exec.VirtualMachine, localIdx int, buf []byte) error {
+	ptr := int(uint32(vm.GetCurrentFrame().Locals[0+localIdx]))
+	msgLen := int(uint32(vm.GetCurrentFrame().Locals[1+localIdx]))
+
+	if len(buf) > msgLen {
+		// will not write since there is no space, and I am too lazy
+		// to implement proper buffered
+		// TODO: improve on this
+		return errors.New("buffer to small")
+	}
+
+	copy(vm.Memory[ptr:ptr+msgLen], buf)
+	return nil
 }
 
 // ResolveGlobal defines a set of global variables for use within a WebAssembly module.
