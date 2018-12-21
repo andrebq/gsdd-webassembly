@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 	"syscall/js"
 	"time"
@@ -15,6 +16,8 @@ type (
 		Time     time.Time
 		LastPing time.Time
 		LastPong time.Time
+
+		IDS map[string]time.Time
 	}
 
 	stateMutator func(*applicationState)
@@ -45,6 +48,19 @@ func renderState(state *applicationState) {
 	}
 	if !state.LastPong.IsZero() {
 		rootDiv.Add(P(Text("Last Pong: "), Text(state.LastPong.Format(time.RFC3339))))
+		rootDiv.Add(P(Text("List of pong ids")))
+		ul := Ul()
+
+		var sorted []string
+		for k := range state.IDS {
+			sorted = append(sorted, k)
+		}
+		sort.Strings(sorted)
+
+		for _, k := range sorted {
+			ul.Add(Li(Text(fmt.Sprintf("%v: %v", k, state.IDS[k].Format(time.RFC3339)))))
+		}
+		rootDiv.Add(ul)
 	}
 
 	Render(rootDiv)
@@ -85,9 +101,13 @@ func main() {
 	}()
 
 	go func() {
-		makeUpdatePong := func(t time.Time) stateMutator {
+		makeUpdatePong := func(t time.Time, id string) stateMutator {
 			return func(s *applicationState) {
 				s.LastPong = t
+				if s.IDS == nil {
+					s.IDS = map[string]time.Time{}
+				}
+				s.IDS[id] = t
 			}
 		}
 		for {
@@ -97,7 +117,7 @@ func main() {
 				consoleErr("pong", err)
 				continue
 			}
-			globalState.Update(makeUpdatePong(time.Now()))
+			globalState.Update(makeUpdatePong(time.Now(), pong.ID))
 		}
 	}()
 	select {}

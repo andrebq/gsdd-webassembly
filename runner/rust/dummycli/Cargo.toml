@@ -1,0 +1,15 @@
+# [package]
+# name = "fib_recursive"
+# version = "0.1.0"
+# authors = ["losfair <zhy20000919@hotmail.com>"]
+# code copied from (https://github.com/perlin-network/life)
+
+[package]
+name = "dummycli"
+version = "0.0.1"
+authors = ["andre moraes <andrebq@gmail.com>"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]

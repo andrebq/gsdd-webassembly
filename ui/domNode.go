@@ -64,6 +64,16 @@ func P(children ...*DOMNode) *DOMNode {
 	return H("p").Add(children...)
 }
 
+// UL tag
+func Ul(children ...*DOMNode) *DOMNode {
+	return H("ul").Add(children...)
+}
+
+// LI tag
+func Li(content *DOMNode) *DOMNode {
+	return H("li").Add(content)
+}
+
 // Text span
 func Text(value string) *DOMNode {
 	return H("span").T(value)

@@ -34,7 +34,7 @@ func post(target *url.URL, data string) (string, error) {
 	}
 
 	if !isSuccess(res) {
-		return "", fmt.Errorf("unexpected status code %s: body: %s", res.StatusCode, body)
+		return "", fmt.Errorf("unexpected status code %v: body: %s", res.StatusCode, body)
 	}
 	return body, nil
 }
